@@ -1,19 +1,26 @@
 #requires -Version 7.0
-Describe 'Command-line workflow with a synthetic CLI' -Skip:(-not $IsWindows) {
+Describe 'Command-line workflow with a synthetic CLI' {
     BeforeAll {
         $script:entryPoint = Join-Path $PSScriptRoot '..\scripts\Invoke-AzureInventory.ps1'
         $script:stubScript = Join-Path $PSScriptRoot 'fixtures\az-stub.ps1'
         $script:pwsh = (Get-Command pwsh -CommandType Application | Select-Object -First 1).Source
         function Invoke-SyntheticWorkflow {
             param([string] $Mode, [string] $Directory)
-            $shim = Join-Path $Directory 'az.cmd'
+            $shim = Join-Path $Directory $(if ($IsWindows) { 'az.cmd' } else { 'az' })
             [IO.Directory]::CreateDirectory($Directory) | Out-Null
-            [IO.File]::WriteAllText($shim, "@echo off`r`n`"$script:pwsh`" -NoProfile -File `"$script:stubScript`" %*`r`nexit /b %errorlevel%`r`n")
+            if ($IsWindows) {
+                [IO.File]::WriteAllText($shim, "@echo off`r`n`"$script:pwsh`" -NoProfile -File `"$script:stubScript`" %*`r`nexit /b %errorlevel%`r`n")
+            }
+            else {
+                $quoted = @($script:pwsh, $script:stubScript) | ForEach-Object { "'" + $_.Replace("'", "'\''") + "'" }
+                [IO.File]::WriteAllText($shim, "#!/bin/sh`nexec $($quoted[0]) -NoProfile -File $($quoted[1]) `"`$@`"`n")
+                chmod u+x $shim
+            }
             $oldPath = $env:PATH
             $oldMode = $env:AZURE_INVENTORY_TEST_MODE
             $PSNativeCommandUseErrorActionPreference = $false
             try {
-                $env:PATH = "$Directory;$oldPath"
+                $env:PATH = "$Directory$([IO.Path]::PathSeparator)$oldPath"
                 $env:AZURE_INVENTORY_TEST_MODE = $Mode
                 $selected = @(Get-Command az -CommandType Application)
                 if ($selected.Count -eq 0 -or $selected[0].Source -ne $shim) {

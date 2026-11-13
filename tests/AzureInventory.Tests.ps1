@@ -305,6 +305,7 @@ InModuleScope AzureInventory {
             { Export-InventoryReport (New-TestModel $fixture) $TestDrive } | Should -Throw '*renderer checksum*'
         }
         It 'rejects vendored Azure icons that do not match their manifest' {
+            Mock Get-FileHash { @{ Hash = [BitConverter]::ToString([Security.Cryptography.SHA256]::Create().ComputeHash([IO.File]::ReadAllBytes($LiteralPath))).Replace('-', '') } }
             Mock Get-FileHash { @{ Hash = 'not-the-icon-checksum' } } -ParameterFilter { $LiteralPath -like '*azure-icons*' }
             { Export-InventoryReport (New-TestModel $fixture) $TestDrive } | Should -Throw '*icon checksum*'
         }
