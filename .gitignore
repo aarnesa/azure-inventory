@@ -1,0 +1,35 @@
+# Generated reports and exports contain customer inventory data
+/output/
+*.drawio
+*.drawio.bkp
+*.drawio.dtmp
+/*.html
+
+# Icon package downloads used by tools/Update-AzureIcons.ps1
+*.zip
+
+# Test and development tooling (Pester results, browser smoke dependencies)
+/TestResults/
+/testResults.xml
+coverage.xml
+/node_modules/
+/package.json
+/package-lock.json
+
+# Local credentials and settings (never commit these)
+/.azure/
+.env
+.env.*
+*.pem
+*.pfx
+*.key
+
+# Editors and OS
+.vscode/
+.idea/
+*.tmp
+*.log
+*.bak
+*.orig
+.DS_Store
+Thumbs.db

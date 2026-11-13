@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-@@MERMAID_HASH@@' 'sha256-@@APP_HASH@@'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; font-src 'none'; base-uri 'none'; form-action 'none'">
+<title>Azure inventory</title>
+<style>
+:root{color-scheme:light;--bg:#f4f7fb;--paper:#fff;--ink:#17243b;--muted:#516079;--line:#dce4ef;--accent:#155fbd}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}main{max-width:1440px;margin:auto;padding:28px}
+header{border-top:5px solid var(--accent);padding:24px;background:var(--paper);border-radius:8px}h1{font-size:30px;margin:0 0 6px}h2{font-size:20px;margin:0 0 16px}h3{font-size:16px}
+.eyebrow{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);font-weight:700}.muted{color:var(--muted)}.scope{overflow-wrap:anywhere}
+section{margin-top:22px;padding:22px;background:var(--paper);border:1px solid var(--line);border-radius:8px}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px}.metric{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:18px}.metric strong{display:block;font-size:30px}.metric span{color:var(--muted)}.metric small{display:block;margin-top:2px;color:var(--muted);font-size:12px}
+.status{display:inline-block;border-radius:20px;padding:5px 12px;font-weight:650;background:#e8f4ec;color:#23613b}.status.partial{background:#fff1d6;color:#834d06}.warning{padding:12px;background:#fff3dd;border-left:4px solid #bc7915;margin:12px 0;overflow-wrap:anywhere}
+.filters{display:flex;flex-wrap:wrap;gap:12px;margin:16px 0}label{display:flex;flex-direction:column;gap:4px;color:var(--muted);font-size:13px}input,select,button{font:inherit;border:1px solid #bccbde;border-radius:5px;padding:8px 10px;background:white;color:var(--ink);max-width:100%}input{min-width:240px}select{max-width:270px}button{cursor:pointer;color:var(--accent);font-weight:600}button:hover{background:#f0f5ff}button:disabled{opacity:.45;cursor:default}input:focus,select:focus,button:focus{outline:2px solid #70a5ea;outline-offset:2px}
+.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;font-size:13px}th{text-align:left;color:var(--muted);font-weight:650;background:#f7f9fc;white-space:nowrap}td,th{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}td{overflow-wrap:anywhere}tbody tr:hover{background:#fafcff}
+.pager{display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap}.mono{font:12px/1.5 ui-monospace,Consolas,monospace;white-space:pre-wrap;overflow-wrap:anywhere}
+summary{cursor:pointer;font-weight:600;padding:5px 0}details p{margin:8px 0}details td{min-width:100px}.details{max-width:700px}
+#diagram{min-height:120px;overflow:auto;border:1px solid var(--line);border-radius:6px;padding:12px;margin-top:16px;background:#fff}#diagram svg{min-width:640px;max-width:none!important;width:100%;height:auto}#diagram .cluster-label foreignObject{overflow:visible}.diagram-tools{display:flex;align-items:end;gap:10px;flex-wrap:wrap}.diagram-tools select{max-width:360px}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:10px;font-size:12px;color:var(--muted);align-items:center}.legend span{display:inline-flex;align-items:center;gap:6px}.swatch{display:inline-block;width:22px;height:14px;border:1.5px solid #94a3b8;border-radius:3px;background:#f8fafc}.swatch.subscription{border-color:#155fbd;background:#fff}.swatch.vnet{border-color:#2563eb;background:#eef5ff}.swatch.subnet{border:1.5px dashed #60a5fa;background:#fff}.swatch.outside{border:1.5px dashed #64748b;background:#fff}.line{display:inline-block;width:28px;border-top:2px solid #475569}.line.dashed{border-top-style:dashed}
+[hidden]{display:none!important}
+.tabs{position:sticky;top:0;z-index:5;display:flex;gap:4px;margin-top:22px;padding:6px;background:var(--paper);border:1px solid var(--line);border-radius:8px;overflow-x:auto;white-space:nowrap;box-shadow:0 2px 6px rgba(23,36,59,.06)}.tabs button{border:0;border-radius:6px;padding:9px 16px;background:transparent;color:var(--muted)}.tabs button:hover{background:#f0f5ff}.tabs button[aria-selected=true]{background:var(--accent);color:#fff}.tabs button:focus{outline-offset:-3px}
+.badge{display:inline-block;min-width:22px;padding:0 7px;margin-left:4px;border-radius:10px;background:#e7eefa;color:var(--accent);font-size:12px;text-align:center}.tabs button[aria-selected=true] .badge{background:rgba(255,255,255,.24);color:#fff}.badge:empty{display:none}
+.view>*{margin-top:18px}
+.alert{padding:10px 14px;background:#fff3dd;border-left:4px solid #bc7915;border-radius:6px;overflow-wrap:anywhere}.alert summary{color:#834d06}.alert .warning{margin:6px 0 0;padding:6px 0;border-left:0;background:transparent}
+.viewbar{display:flex;justify-content:space-between;align-items:flex-start;gap:10px 18px;flex-wrap:wrap;padding:14px 18px;background:var(--paper);border:1px solid var(--line);border-radius:8px}.viewbar-main{display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap;flex:1 1 360px;min-width:0}.viewbar-main>strong{font-size:16px}.viewbar-main>strong:focus{outline:2px solid #70a5ea;outline-offset:3px}.viewbar-actions{display:flex;gap:8px;flex-wrap:wrap}
+.chips{display:inline-flex;gap:6px;flex-wrap:wrap}.chip{display:inline-flex;align-items:center;gap:8px;max-width:100%;padding:3px 6px 3px 12px;border-radius:16px;border-color:#bccbde;background:#e7eefa;font-size:13px;text-align:left;overflow-wrap:anywhere}.chip i{font-style:normal;font-size:12px;line-height:1;padding:4px 6px;border-radius:50%;background:#fff}
+.dash{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.panel{min-width:0;padding:18px;background:var(--paper);border:1px solid var(--line);border-radius:8px}.panel.wide{grid-column:1/-1}
+.panel-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:12px}.panel-head h2{font-size:16px;margin:0}.panel-head span{color:var(--muted);font-size:13px}
+.bars{display:flex;flex-direction:column;gap:6px}button.bar{display:flex;align-items:center;gap:10px;width:100%;padding:7px 10px;border-color:transparent;color:var(--ink);font-weight:500;text-align:left;background:linear-gradient(90deg,#dbe8fb var(--share,0%),#f4f7fb var(--share,0%))}button.bar:hover{border-color:#bccbde}button.bar[aria-pressed=true]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);background:linear-gradient(90deg,#bcd3f6 var(--share,0%),#eaf1fc var(--share,0%))}
+.bar img{width:20px;height:20px;flex:none}.bar .label{flex:1;min-width:0;overflow-wrap:anywhere}.bar .label small{display:block;color:var(--muted);font-size:12px;font-weight:400}.bar .count{font-weight:650;font-variant-numeric:tabular-nums}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:10px}button.tile{display:flex;align-items:center;gap:10px;padding:10px 12px;border-color:var(--line);border-radius:8px;background:#f7f9fc;color:var(--ink);font-weight:500;text-align:left}button.tile:hover{border-color:#bccbde;background:#f0f5ff}button.tile[aria-pressed=true]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);background:#eaf1fc}.tile img{width:28px;height:28px;flex:none}.tile strong{display:block;font-size:20px;line-height:1.1}.tile-text{display:block;min-width:0}.tile-name{display:block;color:var(--muted);font-size:12px;overflow-wrap:anywhere}
+.panel-foot{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;font-size:13px}.panel-foot button{padding:5px 10px;font-size:13px}.clear-filters{align-self:flex-end}
+.empty{padding:22px;color:var(--muted)}footer{padding:24px 0;color:var(--muted);font-size:12px}.notice{font-size:13px}noscript{display:block;padding:24px;background:#fff3dd}
+@media(max-width:800px){main{padding:12px}.metrics{grid-template-columns:1fr 1fr;gap:10px}.metric{padding:12px 14px}.metric strong{font-size:24px}.dash{grid-template-columns:1fr}section,.panel{padding:16px}.tabs button{padding:8px 11px}}
+@media print{body{background:white}main{padding:0}section,header,.metric,.panel,.viewbar{break-inside:avoid}.tabs,.filters,.pager,.panel-foot,.viewbar-actions,button:not(.bar):not(.tile):not(.chip){display:none}.chip i{display:none}.table-wrap{overflow:visible}.notice{font-size:11px}}
+</style>
+</head>
+<body>
+<noscript>This offline report requires JavaScript to display its embedded inventory and diagrams. No internet connection is needed.</noscript>
+<main>
+<header>
+  <div class="eyebrow">Read-only / local report</div>
+  <h1>Azure inventory</h1>
+  <p class="scope muted" id="scope"></p>
+  <span id="status" class="status"></span>
+  <p class="muted" id="time"></p>
+    <p class="muted notice">Visible-data inventory: <strong>not proof of a complete tenant inventory</strong>. See Scope &amp; coverage on the Overview tab.</p>
+</header>
+  <div class="tabs" id="tabs" role="tablist" aria-label="Report views">
+    <button id="tab-overview" type="button" role="tab" aria-selected="true" aria-controls="view-overview">Overview</button>
+    <button id="tab-resources" type="button" role="tab" aria-selected="false" aria-controls="view-resources" tabindex="-1">Resources <span class="badge" id="resource-badge"></span></button>
+    <button id="tab-groups" type="button" role="tab" aria-selected="false" aria-controls="view-groups" tabindex="-1">Resource groups <span class="badge" id="group-badge"></span></button>
+    <button id="tab-architecture" type="button" role="tab" aria-selected="false" aria-controls="view-architecture" tabindex="-1">Architecture</button>
+  </div>
+  <div class="view" id="view-overview" role="tabpanel" aria-labelledby="tab-overview">
+  <details class="alert" id="warnings-box" hidden><summary id="warnings-summary"></summary><div id="warnings"></div></details>
+<div class="metrics" id="metrics"></div>
+  <div class="viewbar" id="viewbar">
+    <div class="viewbar-main">
+      <strong id="view-count" tabindex="-1" aria-live="polite"></strong>
+      <span id="view-hint" class="muted notice">Select a category, type, resource group, subscription or region to filter this dashboard.</span>
+      <span class="chips" id="chips"></span>
+    </div>
+    <div class="viewbar-actions">
+      <button id="clear-filters" class="clear-filters" type="button" hidden>Clear filters</button>
+      <button id="open-resources" type="button">Open in Resources &rarr;</button>
+    </div>
+  </div>
+  <div class="dash">
+    <div class="panel wide" id="panel-category"></div>
+    <div class="panel" id="panel-type"></div>
+    <div class="panel" id="panel-group"></div>
+    <div class="panel" id="panel-subscription"></div>
+    <div class="panel" id="panel-region"></div>
+  </div>
+<section>
+  <h2>Scope &amp; coverage</h2>
+  <p class="notice">This report contains the returned Resource Graph data visible to the signed-in user in one selected tenant. It is <strong>not proof of a complete tenant inventory</strong>. Azure may silently omit resources without read access. Resource Graph supports a subset of management-plane objects, is eventually consistent, and is not an atomic snapshot. Data-plane contents, costs, auditing, and comprehensive RBAC analysis are excluded.</p>
+  <details><summary>Collection details and subscription status</summary>
+    <p class="notice">A successful query can return zero visible rows. Referenced objects absent from the resource table may be embedded subresources, unsupported objects, or outside readable scope; this report does not guess the reason. Names and tags may be confidential.</p>
+    <div class="table-wrap" id="subscriptions"></div>
+  </details>
+</section>
+</div>
+<div class="view" id="view-resources" role="tabpanel" aria-labelledby="tab-resources" hidden>
+<section>
+  <h2>Resources</h2>
+  <div class="filters">
+    <label>Search names, IDs, SKUs and tags<input id="search" type="search" placeholder="Search resources..." autocomplete="off"></label>
+    <label>Subscription<select id="subscription-filter"><option value="">All subscriptions</option></select></label>
+    <label>Resource group<select id="group-filter"><option value="">All groups</option></select></label>
+    <label>Category<select id="category-filter"><option value="">All categories</option></select></label>
+    <label>Type<select id="type-filter"><option value="">All types</option></select></label>
+    <label>Region<select id="region-filter"><option value="">All regions</option></select></label>
+    <button id="reset-filters" class="clear-filters" type="button" disabled>Clear filters</button>
+  </div>
+  <div class="table-wrap"><table aria-label="Resources"><thead><tr><th>Name / details</th><th>Type</th><th>Subscription</th><th>Resource group</th><th>Region</th><th>SKU</th></tr></thead><tbody id="resource-rows"></tbody></table></div>
+  <div class="pager"><button id="previous" type="button">Previous</button><span id="page-status" aria-live="polite"></span><button id="next" type="button">Next</button></div>
+</section>
+</div>
+<div class="view" id="view-groups" role="tabpanel" aria-labelledby="tab-groups" hidden>
+<section>
+  <h2>Resource groups</h2>
+  <p class="muted notice">Includes visible empty groups. Groups inferred from resource IDs are labelled when container metadata was not returned. Counts include only collected resource rows.</p>
+  <label>Find a group<input id="group-search" type="search" placeholder="Group or subscription..." autocomplete="off"></label>
+  <div class="table-wrap" id="group-table"></div>
+  <div class="pager"><button id="group-previous" type="button">Previous</button><span id="group-page-status" aria-live="polite"></span><button id="group-next" type="button">Next</button></div>
+</section>
+</div>
+<div class="view" id="view-architecture" role="tabpanel" aria-labelledby="tab-architecture" hidden>
+<section>
+  <h2>Architecture diagrams</h2>
+    <p class="notice">Diagrams are generated locally on demand. Edges mean observed references or structural containment, <strong>not verified traffic, access permissions, or a full application dependency map</strong>. Large views are split into pages; all resources remain in the Resources tab. <span id="relationship-count"></span></p>
+    <div class="diagram-tools">
+      <label>Subscription<select id="diagram-subscription"><option value="">All subscriptions (tenant overview)</option></select></label>
+      <label>Resource group<select id="diagram-group" disabled><option value="">All groups (subscription overview)</option></select></label>
+      <label>Resource<select id="diagram-resource" disabled><option value="">All resources in group</option></select></label>
+      <label>Style<select id="diagram-style"><option value="compact">Compact architecture</option><option value="detailed">Detailed (every resource and link)</option></select></label>
+      <button id="render-diagram" type="button">Render diagram</button>
+      <button id="diagram-previous" type="button">Previous view</button>
+      <button id="diagram-next" type="button">Next view</button>
+    </div>
+    <div class="diagram-tools">
+      <button id="export-view" type="button">Download this view (.drawio)</button>
+      <button id="export-tenant" type="button">Download whole tenant (.drawio)</button>
+      <span id="export-status" class="muted notice" aria-live="polite"></span>
+    </div>
+    <p class="muted notice">Editable draw.io files are created in this browser. Open them in draw.io Desktop or the VS Code Draw.io Integration extension; do not upload customer data to web services without approval.</p>
+    <p id="diagram-status" class="muted" aria-live="polite">Diagrams are rendered when this tab is opened or a view is selected; none are rendered at page startup.</p>
+    <div id="diagram"></div>
+    <div class="legend" id="diagram-legend">
+      <span><i class="swatch subscription"></i>Subscription</span><span><i class="swatch"></i>Resource group</span><span><i class="swatch vnet"></i>Virtual network</span><span><i class="swatch subnet"></i>Subnet</span><span><i class="swatch outside"></i>Outside this view</span><span><i class="line"></i>Observed reference</span><span><i class="line dashed"></i>VNet peering</span>
+    </div>
+    <p class="muted notice" id="diagram-mode-note"></p>
+    <details><summary>Evidence for this diagram's connections</summary><div class="table-wrap" id="edge-evidence"></div></details>
+</section>
+</div>
+<footer>
+  <p>Generated locally by Azure Inventory for GitHub Copilot. No report data needs to be sent to a server to view this file. Sharing this HTML shares its embedded inventory. Printing includes only the active tab with its currently displayed table page, dashboard selection or rendered diagram, not every resource.</p>
+  <details><summary>Third-party notices</summary>
+  <p>Diagram icons are the Microsoft Azure architecture icons @@ICON_VERSION@@, used unmodified under Microsoft's terms, which permit their use in architecture diagrams, training materials and documentation only. Microsoft and Azure are trademarks of the Microsoft group of companies.</p>
+  <p>Diagrams use @mermaid-js/tiny 12.3.0 (MIT), including DOMPurify (Apache-2.0 option) and Lodash (MIT). Original license texts follow; the bundled renderer also retains its upstream dependency notices.</p>
+  <pre class="mono">@@LICENSE@@</pre>
+  </details>
+</footer>
+</main>
+<script id="inventory-data" type="application/json">@@DATA@@</script>
+<script id="azure-icons" type="application/json">@@ICONS@@</script>
+<script id="azure-types" type="application/json">@@TYPES@@</script>
+<script>@@MERMAID@@</script>
+<script>@@APP@@</script>
+</body>
+</html>

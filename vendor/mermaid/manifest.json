@@ -1,0 +1,12 @@
+{
+  "package": "@mermaid-js/tiny",
+  "version": "12.3.0",
+  "license": "MIT",
+  "integrity": "sha512-90BO2kQvmQWj9YjBX2IsLHCw61rN69dPTn5wFfDu+b9aT7qtzfzTA3wpKWeaRAKK85refSo9How5EOeY39DWfA==",
+  "sha256": "C41F5236091B83F524C4940F97A16B2B14A76F21FF84AEA4FD6B66421D8A2A9A",
+  "source": "https://www.npmjs.com/package/@mermaid-js/tiny/v/12.3.0",
+  "bundledLicenseFiles": [
+    { "package": "dompurify", "version": "3.4.17", "file": "LICENSE-DOMPURIFY", "license": "Apache-2.0" },
+    { "package": "lodash-es", "version": "4.18.1", "file": "LICENSE-LODASH", "license": "MIT" }
+  ]
+}
